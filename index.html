@@ -14,6 +14,7 @@
             --muted: #9ca3af;
             --danger: #ef4444;
             --success: #10b981;
+            --whatsapp: #25d366;
             --border: #2a2f3a;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -60,7 +61,7 @@
             padding: 20px;
             margin-bottom: 18px;
         }
-        .card h2, .card h3 { color: var(--accent); margin-bottom: 12px; }
+        .card h2, .card h3 { color: var(--accent); margin-bottom: 10px; }
         .muted { color: var(--muted); font-size: 0.88rem; margin-bottom: 14px; }
 
         label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 5px; }
@@ -144,11 +145,29 @@
             cursor: pointer;
             font-size: 0.82rem;
             font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
         }
         .btn-ok { background: var(--success); color: #000; }
         .btn-warn { background: var(--accent); color: #000; }
+        .btn-wa { background: var(--whatsapp); color: #000; }
         .btn-del { background: var(--danger); color: #fff; }
         .auth-box { max-width: 400px; margin: 30px auto; }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            background: #12151b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .stat-box span { display: block; font-size: 0.78rem; color: var(--muted); }
+        .stat-box b { font-size: 1.05rem; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -167,30 +186,30 @@
     <div id="sec-booking" class="section active">
         <div class="card">
             <h2>Yeni Randevu Qeydiyyatı</h2>
-            <p class="muted">Xidməti, ustanı, tarixi və boş saatı seçib yerinizi bron edin.</p>
+            <p class="muted">İş saatları: <b>11:00 – 23:00</b> | Ustalar: <b>Usta Rəhman</b> & <b>Usta Fərid</b></p>
 
             <label for="cust-name">Ad və Soyad</label>
             <input type="text" id="cust-name" placeholder="Məs: Murad Əliyev">
 
-            <label for="cust-phone">Telefon Nömrəsi</label>
+            <label for="cust-phone">WhatsApp / Telefon Nömrəsi</label>
             <input type="tel" id="cust-phone" placeholder="Məs: 050 555 44 33">
 
             <div class="grid-2">
                 <div>
                     <label for="service-select">Xidmət</label>
                     <select id="service-select">
-                        <option value="Saç kəsimi (15 AZN)">Saç kəsimi — 15 AZN</option>
-                        <option value="Saqqal kəsimi (10 AZN)">Saqqal kəsimi — 10 AZN</option>
-                        <option value="Saç + Saqqal (22 AZN)">Saç + Saqqal — 22 AZN</option>
-                        <option value="Uşaq kəsimi (12 AZN)">Uşaq kəsimi — 12 AZN</option>
+                        <option value="Saç kəsimi (15 AZN)" data-price="15">Saç kəsimi — 15 AZN</option>
+                        <option value="Saqqal kəsimi (10 AZN)" data-price="10">Saqqal kəsimi — 10 AZN</option>
+                        <option value="Saç + Saqqal (22 AZN)" data-price="22">Saç + Saqqal — 22 AZN</option>
+                        <option value="Uşaq kəsimi (12 AZN)" data-price="12">Uşaq kəsimi — 12 AZN</option>
                     </select>
                 </div>
 
                 <div>
                     <label for="barber-select">Bərbər</label>
                     <select id="barber-select" onchange="refreshSlotAvailability()">
-                        <option value="Usta Rəhman">Usta Rəhman</option>
-                        <option value="Usta Fərid">Usta Fərid</option>
+                        <option value="Usta Rəhman">Usta Rəhman (+994 50 994 75 90)</option>
+                        <option value="Usta Fərid">Usta Fərid (+994 50 390 31 70)</option>
                     </select>
                 </div>
             </div>
@@ -202,9 +221,8 @@
                 </div>
 
                 <div>
-                    <label for="book-time">Saat</label>
+                    <label for="book-time">Saat (11:00 – 23:00)</label>
                     <select id="book-time">
-                        <option value="10:00">10:00</option>
                         <option value="11:00">11:00</option>
                         <option value="12:00">12:00</option>
                         <option value="13:00">13:00</option>
@@ -215,6 +233,9 @@
                         <option value="18:00">18:00</option>
                         <option value="19:00">19:00</option>
                         <option value="20:00">20:00</option>
+                        <option value="21:00">21:00</option>
+                        <option value="22:00">22:00</option>
+                        <option value="23:00">23:00</option>
                     </select>
                 </div>
             </div>
@@ -227,7 +248,7 @@
     <div id="sec-schedule" class="section">
         <div class="card">
             <h2>Aktiv və Bugünkü Növbələr</h2>
-            <p class="muted">Seçilmiş gün üzrə bron olunmuş vaxtlar aşağıda görünür.</p>
+            <p class="muted">Seçilmiş gün üzrə bron olunmuş vaxtlar (11:00 – 23:00).</p>
             <label for="filter-date">Tarixə görə süzgəclə</label>
             <input type="date" id="filter-date" onchange="renderPublicSchedule()">
             <div id="public-schedule-list"></div>
@@ -238,7 +259,7 @@
     <div id="sec-barber" class="section">
         <div id="barber-login-box" class="card auth-box">
             <h2>Bərbər Girişi</h2>
-            <p class="muted" style="text-align:center;">Panelə daxil olmaq üçün adınızı seçin.</p>
+            <p class="muted" style="text-align:center;">Panelə daxil olmaq üçün ustanı seçin.</p>
             <label for="barber-login-select">Bərbər seçin</label>
             <select id="barber-login-select">
                 <option value="Usta Rəhman">Usta Rəhman</option>
@@ -250,11 +271,27 @@
         <div id="barber-panel-box" class="card" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
                 <div>
-                    <h2 style="margin:0;"><span id="active-barber-title"></span> — Randevular</h2>
-                    <p class="muted" style="margin:4px 0 0 0;">Müştərinin vaxtını buradan dəyişə bilərsiniz (məsələn, 10:00 → 12:00).</p>
+                    <h2 style="margin:0;"><span id="active-barber-title"></span></h2>
+                    <p class="muted" style="margin:4px 0 0 0;">WhatsApp: <b id="active-barber-wa"></b> | İş saatı: <b>11:00 – 23:00</b></p>
                 </div>
                 <button class="btn-sm btn-del" onclick="barberLogout()">Çıxış</button>
             </div>
+
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <span>Ümumi Randevu</span>
+                    <b id="stat-total-count">0</b>
+                </div>
+                <div class="stat-box">
+                    <span>Tamamlanan</span>
+                    <b id="stat-done-count">0</b>
+                </div>
+                <div class="stat-box">
+                    <span>Tamamlanan Gəlir</span>
+                    <b id="stat-income">0 AZN</b>
+                </div>
+            </div>
+
             <div id="barber-bookings-list"></div>
         </div>
     </div>
@@ -272,7 +309,15 @@
     const db = getDatabase(app);
     const bookingsRef = ref(db, "barbershop_bookings");
 
-    const TIME_SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+    const BARBER_PHONES = {
+        "Usta Rəhman": "994509947590",
+        "Usta Fərid": "994503903170"
+    };
+
+    const TIME_SLOTS = [
+        "11:00", "12:00", "13:00", "14:00", "15:00", "16:00",
+        "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
+    ];
 
     let bookings = [];
     let activeBarber = localStorage.getItem("active_barber") || "";
@@ -280,6 +325,23 @@
     const todayStr = new Date().toISOString().split("T")[0];
     document.getElementById("book-date").value = todayStr;
     document.getElementById("filter-date").value = todayStr;
+
+    function formatWaPhone(rawPhone) {
+        let digits = String(rawPhone || "").replace(/\D/g, "");
+        if (!digits) return "";
+        if (digits.startsWith("0") && digits.length === 10) {
+            digits = "994" + digits.slice(1);
+        } else if (digits.length === 9 && (digits.startsWith("50") || digits.startsWith("51") || digits.startsWith("55") || digits.startsWith("70") || digits.startsWith("77") || digits.startsWith("99"))) {
+            digits = "994" + digits;
+        }
+        return digits;
+    }
+
+    function buildWaUrl(phone, text) {
+        const cleanPhone = formatWaPhone(phone);
+        const encoded = encodeURIComponent(text);
+        return cleanPhone ? `https://wa.me/${cleanPhone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+    }
 
     window.showSection = function(sec) {
         document.querySelectorAll(".section").forEach(el => el.classList.remove("active"));
@@ -312,13 +374,19 @@
     window.createBooking = async function() {
         const name = document.getElementById("cust-name").value.trim();
         const phone = document.getElementById("cust-phone").value.trim();
-        const service = document.getElementById("service-select").value;
+        const serviceEl = document.getElementById("service-select");
+        const service = serviceEl.value;
+        const price = Number(serviceEl.selectedOptions[0]?.dataset?.price || 0);
         const barber = document.getElementById("barber-select").value;
         const date = document.getElementById("book-date").value;
         const time = document.getElementById("book-time").value;
 
         if (!name || !phone || !date || !time) {
             return alert("Zəhmət olmasa ad, telefon, tarix və saatı daxil edin.");
+        }
+
+        if (!TIME_SLOTS.includes(time)) {
+            return alert("İş saatı 11:00 – 23:00 aralığındadır.");
         }
 
         const conflict = bookings.some(
@@ -333,6 +401,7 @@
                 name,
                 phone,
                 service,
+                price,
                 barber,
                 date,
                 time,
@@ -342,7 +411,13 @@
 
             document.getElementById("cust-name").value = "";
             document.getElementById("cust-phone").value = "";
-            alert("Randevunuz qeydə alındı!");
+
+            const barberWa = BARBER_PHONES[barber] || "";
+            const msg = `Salam ${barber}, yeni randevu qeydə alındı:\nMüştəri: ${name}\nTelefon: ${phone}\nXidmət: ${service}\nTarix: ${date}\nSaat: ${time}`;
+            const sendToBarber = confirm("Randevunuz qeydə alındı! İndi WhatsApp ilə ustaya məlumat göndərmək istəyirsiniz?");
+            if (sendToBarber) {
+                window.open(buildWaUrl(barberWa, msg), "_blank");
+            }
             showSection("schedule");
         } catch (err) {
             console.error(err);
@@ -385,7 +460,7 @@
         renderBarberView();
     };
 
-    window.rescheduleBooking = async function(bookingId, barberName) {
+    window.rescheduleBooking = async function(bookingId, barberName, customerName, customerPhone) {
         const dateInput = document.getElementById(`resched-date-${bookingId}`);
         const timeSelect = document.getElementById(`resched-time-${bookingId}`);
         const newDate = dateInput ? dateInput.value : "";
@@ -410,7 +485,12 @@
                 time: newTime,
                 status: "Gözləyir"
             });
-            alert(`Randevu ${newDate} | ${newTime} vaxtına dəyişdirildi.`);
+
+            const waText = `Salam ${customerName}, ${barberName} ilə randevunuz ${newDate} tarixində saat ${newTime} vaxtına dəyişdirildi.`;
+            const sendNow = confirm(`Vaxt ${newDate} | ${newTime} olaraq yeniləndi. Müştəriyə WhatsApp mesajı göndərilsin?`);
+            if (sendNow) {
+                window.open(buildWaUrl(customerPhone, waText), "_blank");
+            }
         } catch (err) {
             console.error(err);
             alert("Vaxt yenilənərkən xəta baş verdi.");
@@ -439,6 +519,7 @@
         const loginBox = document.getElementById("barber-login-box");
         const panelBox = document.getElementById("barber-panel-box");
         const titleEl = document.getElementById("active-barber-title");
+        const waEl = document.getElementById("active-barber-wa");
 
         if (!activeBarber) {
             loginBox.style.display = "block";
@@ -450,10 +531,25 @@
         panelBox.style.display = "block";
         titleEl.innerText = activeBarber;
 
+        const rawWa = BARBER_PHONES[activeBarber] || "";
+        waEl.innerText = rawWa ? `+${rawWa}` : "-";
+
         const listEl = document.getElementById("barber-bookings-list");
         const barberBookings = bookings
             .filter(b => b.barber === activeBarber)
             .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+
+        const activeOnes = barberBookings.filter(b => b.status !== "Ləğv edildi");
+        const doneOnes = barberBookings.filter(b => b.status === "Tamamlandı");
+        const incomeSum = doneOnes.reduce((sum, item) => {
+            if (typeof item.price === "number" && item.price > 0) return sum + item.price;
+            const match = String(item.service || "").match(/(\d+)\s*AZN/i);
+            return sum + (match ? Number(match[1]) : 0);
+        }, 0);
+
+        document.getElementById("stat-total-count").innerText = activeOnes.length;
+        document.getElementById("stat-done-count").innerText = doneOnes.length;
+        document.getElementById("stat-income").innerText = `${incomeSum} AZN`;
 
         if (barberBookings.length === 0) {
             listEl.innerHTML = `<p class="muted">${activeBarber} üçün hələ qeydiyyat yoxdur.</p>`;
@@ -476,6 +572,12 @@
                 return `<option value="${slot}" ${selectedAttr} ${disabledAttr}>${labelText}</option>`;
             }).join("");
 
+            const customerMsg = encodeURIComponent(
+                `Salam ${b.name}, ${b.barber} (+${BARBER_PHONES[b.barber] || ""}) ilə ${b.date} tarixində saat ${b.time} (${b.service}) randevunuz qeydə alınıb.`
+            );
+            const cleanCustPhone = formatWaPhone(b.phone);
+            const waHref = cleanCustPhone ? `https://wa.me/${cleanCustPhone}?text=${customerMsg}` : `https://wa.me/?text=${customerMsg}`;
+
             return `
                 <div class="booking-item">
                     <div class="booking-top">
@@ -485,6 +587,7 @@
                             <span class="badge ${badgeClass}">${b.status}</span>
                         </div>
                         <div class="actions-row">
+                            <a class="btn-sm btn-wa" href="${waHref}" target="_blank" rel="noopener">WhatsApp</a>
                             <button class="btn-sm btn-ok" onclick="updateBookingStatus('${b.id}', 'Tamamlandı')">Tamamlandı</button>
                             <button class="btn-sm" style="background:#374151; color:#fff;" onclick="updateBookingStatus('${b.id}', 'Ləğv edildi')">Ləğv et</button>
                             <button class="btn-sm btn-del" onclick="deleteBooking('${b.id}')">Sil</button>
@@ -495,7 +598,7 @@
                         <span style="font-size:0.82rem; color:var(--muted);">Vaxtı dəyiş:</span>
                         <input type="date" id="resched-date-${b.id}" value="${b.date}">
                         <select id="resched-time-${b.id}">${slotOptions}</select>
-                        <button class="btn-sm btn-warn" onclick="rescheduleBooking('${b.id}', '${b.barber}')">Vaxtı Yenilə</button>
+                        <button class="btn-sm btn-warn" onclick="rescheduleBooking('${b.id}', '${b.barber}', '${b.name.replace(/'/g, "\\'")}', '${b.phone.replace(/'/g, "\\'")}')">Vaxtı Yenilə</button>
                     </div>
                 </div>
             `;
