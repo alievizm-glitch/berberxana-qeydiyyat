@@ -93,6 +93,20 @@
         }
         .btn-primary:hover { background: var(--accent-hover); }
 
+        .auth-box { max-width: 440px; margin: 24px auto; }
+        .login-block {
+            background: #12151b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .login-block h3 {
+            font-size: 0.98rem;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
         .booking-item {
             background: #12151b;
             border: 1px solid var(--border);
@@ -152,7 +166,6 @@
         .btn-warn { background: var(--accent); color: #000; }
         .btn-wa { background: var(--whatsapp); color: #000; }
         .btn-del { background: var(--danger); color: #fff; }
-        .auth-box { max-width: 400px; margin: 30px auto; }
 
         .stats-bar {
             display: grid;
@@ -168,6 +181,27 @@
         }
         .stat-box span { display: block; font-size: 0.78rem; color: var(--muted); }
         .stat-box b { font-size: 1.05rem; color: var(--accent); }
+
+        .barber-switch {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .barber-switch button {
+            padding: 7px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.83rem;
+            font-weight: bold;
+        }
+        .barber-switch button.active {
+            background: var(--accent);
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -177,7 +211,7 @@
     <div class="nav-btns">
         <button onclick="showSection('booking')" id="nav-booking" class="active">Qeydiyyat</button>
         <button onclick="showSection('schedule')" id="nav-schedule">Növbələr</button>
-        <button onclick="showSection('barber')" id="nav-barber">Bərbər Paneli</button>
+        <button onclick="showSection('barber')" id="nav-barber">Panel</button>
     </div>
 </header>
 
@@ -255,17 +289,32 @@
         </div>
     </div>
 
-    <!-- BƏRBƏR PANELİ -->
+    <!-- GİRİŞ VƏ BƏRBƏR / ADMİN PANELİ -->
     <div id="sec-barber" class="section">
         <div id="barber-login-box" class="card auth-box">
-            <h2>Bərbər Girişi</h2>
-            <p class="muted" style="text-align:center;">Panelə daxil olmaq üçün ustanı seçin.</p>
-            <label for="barber-login-select">Bərbər seçin</label>
-            <select id="barber-login-select">
-                <option value="Usta Rəhman">Usta Rəhman</option>
-                <option value="Usta Fərid">Usta Fərid</option>
-            </select>
-            <button class="btn-primary" onclick="barberLogin()">Daxil Ol</button>
+            <h2 style="text-align:center;">Panel Girişi</h2>
+
+            <!-- ÜST HİSSƏ: ADMIN -->
+            <div class="login-block">
+                <h3>Admin</h3>
+                <label for="admin-pass-input">Admin Şifrəsi</label>
+                <input type="password" id="admin-pass-input" placeholder="Şifrəni daxil edin">
+                <button class="btn-primary" onclick="loginAs('admin')">Admin Giriş</button>
+            </div>
+
+            <!-- ALT HİSSƏ: BARBER 1 & BARBER 2 -->
+            <div class="login-block" style="margin-bottom:0;">
+                <h3>Barber 1 & Barber 2</h3>
+                <label for="barber-role-select">Bərbər hesabı</label>
+                <select id="barber-role-select">
+                    <option value="barber1">Barber 1 — Usta Rəhman</option>
+                    <option value="barber2">Barber 2 — Usta Fərid</option>
+                </select>
+
+                <label for="barber-pass-input">Bərbər Şifrəsi</label>
+                <input type="password" id="barber-pass-input" placeholder="Şifrəni daxil edin">
+                <button class="btn-primary" onclick="loginBarberAccount()">Bərbər Giriş</button>
+            </div>
         </div>
 
         <div id="barber-panel-box" class="card" style="display:none;">
@@ -277,9 +326,14 @@
                 <button class="btn-sm btn-del" onclick="barberLogout()">Çıxış</button>
             </div>
 
+            <div id="admin-barber-switcher" class="barber-switch" style="display:none;">
+                <button id="btn-view-rehman" onclick="switchAdminViewingBarber('Usta Rəhman')">Barber 1 (Usta Rəhman)</button>
+                <button id="btn-view-ferid" onclick="switchAdminViewingBarber('Usta Fərid')">Barber 2 (Usta Fərid)</button>
+            </div>
+
             <div class="stats-bar">
                 <div class="stat-box">
-                    <span>Ümumi Randevu</span>
+                    <span>Aktiv Randevu</span>
                     <b id="stat-total-count">0</b>
                 </div>
                 <div class="stat-box">
@@ -309,6 +363,13 @@
     const db = getDatabase(app);
     const bookingsRef = ref(db, "barbershop_bookings");
 
+    // Şifrələr ekranda göstərilmir; yalnız bərbərlər və admin bilir
+    const PASSWORDS = {
+        admin: "admin2026",
+        barber1: "rehman2026",
+        barber2: "ferid2026"
+    };
+
     const BARBER_PHONES = {
         "Usta Rəhman": "994509947590",
         "Usta Fərid": "994503903170"
@@ -320,7 +381,8 @@
     ];
 
     let bookings = [];
-    let activeBarber = localStorage.getItem("active_barber") || "";
+    let sessionRole = sessionStorage.getItem("panel_role") || ""; // "admin" | "barber1" | "barber2"
+    let viewingBarber = sessionStorage.getItem("viewing_barber") || "Usta Rəhman";
 
     const todayStr = new Date().toISOString().split("T")[0];
     document.getElementById("book-date").value = todayStr;
@@ -348,6 +410,51 @@
         document.querySelectorAll(".nav-btns button").forEach(el => el.classList.remove("active"));
         document.getElementById("sec-" + sec).classList.add("active");
         document.getElementById("nav-" + sec).classList.add("active");
+        renderBarberView();
+    };
+
+    window.loginAs = function(role) {
+        if (role === "admin") {
+            const pass = document.getElementById("admin-pass-input").value;
+            if (pass !== PASSWORDS.admin) {
+                return alert("Admin şifrəsi yanlışdır.");
+            }
+            sessionRole = "admin";
+            viewingBarber = "Usta Rəhman";
+            sessionStorage.setItem("panel_role", sessionRole);
+            sessionStorage.setItem("viewing_barber", viewingBarber);
+            document.getElementById("admin-pass-input").value = "";
+            renderBarberView();
+        }
+    };
+
+    window.loginBarberAccount = function() {
+        const selectedRole = document.getElementById("barber-role-select").value;
+        const pass = document.getElementById("barber-pass-input").value;
+
+        if (!PASSWORDS[selectedRole] || pass !== PASSWORDS[selectedRole]) {
+            return alert("Şifrə yanlışdır.");
+        }
+
+        sessionRole = selectedRole;
+        viewingBarber = selectedRole === "barber1" ? "Usta Rəhman" : "Usta Fərid";
+        sessionStorage.setItem("panel_role", sessionRole);
+        sessionStorage.setItem("viewing_barber", viewingBarber);
+        document.getElementById("barber-pass-input").value = "";
+        renderBarberView();
+    };
+
+    window.barberLogout = function() {
+        sessionRole = "";
+        sessionStorage.removeItem("panel_role");
+        sessionStorage.removeItem("viewing_barber");
+        renderBarberView();
+    };
+
+    window.switchAdminViewingBarber = function(barberName) {
+        if (sessionRole !== "admin") return;
+        viewingBarber = barberName;
+        sessionStorage.setItem("viewing_barber", viewingBarber);
         renderBarberView();
     };
 
@@ -447,20 +554,8 @@
         `).join("");
     }
 
-    window.barberLogin = function() {
-        const selected = document.getElementById("barber-login-select").value;
-        activeBarber = selected;
-        localStorage.setItem("active_barber", activeBarber);
-        renderBarberView();
-    };
-
-    window.barberLogout = function() {
-        activeBarber = "";
-        localStorage.removeItem("active_barber");
-        renderBarberView();
-    };
-
     window.rescheduleBooking = async function(bookingId, barberName, customerName, customerPhone) {
+        if (!sessionRole) return alert("Giriş tələb olunur.");
         const dateInput = document.getElementById(`resched-date-${bookingId}`);
         const timeSelect = document.getElementById(`resched-time-${bookingId}`);
         const newDate = dateInput ? dateInput.value : "";
@@ -498,6 +593,7 @@
     };
 
     window.updateBookingStatus = async function(id, status) {
+        if (!sessionRole) return alert("Giriş tələb olunur.");
         try {
             await update(ref(db, `barbershop_bookings/${id}`), { status });
         } catch (err) {
@@ -507,6 +603,7 @@
     };
 
     window.deleteBooking = async function(id) {
+        if (!sessionRole) return alert("Giriş tələb olunur.");
         try {
             await remove(ref(db, `barbershop_bookings/${id}`));
         } catch (err) {
@@ -520,8 +617,9 @@
         const panelBox = document.getElementById("barber-panel-box");
         const titleEl = document.getElementById("active-barber-title");
         const waEl = document.getElementById("active-barber-wa");
+        const switcherEl = document.getElementById("admin-barber-switcher");
 
-        if (!activeBarber) {
+        if (!sessionRole) {
             loginBox.style.display = "block";
             panelBox.style.display = "none";
             return;
@@ -529,14 +627,30 @@
 
         loginBox.style.display = "none";
         panelBox.style.display = "block";
-        titleEl.innerText = activeBarber;
 
-        const rawWa = BARBER_PHONES[activeBarber] || "";
+        const targetBarber = sessionRole === "barber1"
+            ? "Usta Rəhman"
+            : (sessionRole === "barber2" ? "Usta Fərid" : viewingBarber);
+
+        const roleLabel = sessionRole === "admin"
+            ? `Admin — ${targetBarber}`
+            : (sessionRole === "barber1" ? "Barber 1 (Usta Rəhman)" : "Barber 2 (Usta Fərid)");
+
+        titleEl.innerText = roleLabel;
+        const rawWa = BARBER_PHONES[targetBarber] || "";
         waEl.innerText = rawWa ? `+${rawWa}` : "-";
+
+        if (sessionRole === "admin") {
+            switcherEl.style.display = "flex";
+            document.getElementById("btn-view-rehman").classList.toggle("active", targetBarber === "Usta Rəhman");
+            document.getElementById("btn-view-ferid").classList.toggle("active", targetBarber === "Usta Fərid");
+        } else {
+            switcherEl.style.display = "none";
+        }
 
         const listEl = document.getElementById("barber-bookings-list");
         const barberBookings = bookings
-            .filter(b => b.barber === activeBarber)
+            .filter(b => b.barber === targetBarber)
             .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
 
         const activeOnes = barberBookings.filter(b => b.status !== "Ləğv edildi");
@@ -552,7 +666,7 @@
         document.getElementById("stat-income").innerText = `${incomeSum} AZN`;
 
         if (barberBookings.length === 0) {
-            listEl.innerHTML = `<p class="muted">${activeBarber} üçün hələ qeydiyyat yoxdur.</p>`;
+            listEl.innerHTML = `<p class="muted">${targetBarber} üçün hələ qeydiyyat yoxdur.</p>`;
             return;
         }
 
