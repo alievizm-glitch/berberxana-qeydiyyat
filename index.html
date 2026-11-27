@@ -220,7 +220,7 @@
     <div id="sec-booking" class="section active">
         <div class="card">
             <h2>Yeni Randevu Qeydiyyatı</h2>
-            <p class="muted">İş saatları: <b>11:00 – 23:00</b> | Ustalar: <b>Usta Rəhman</b> & <b>Usta Fərid</b></p>
+            <p class="muted">İş saatları: <b>10:00 – 22:00</b> | Ustalar: <b>Usta Rəhman</b> & <b>Usta Fərid</b></p>
 
             <label for="cust-name">Ad və Soyad</label>
             <input type="text" id="cust-name" placeholder="Məs: Murad Əliyev">
@@ -232,10 +232,11 @@
                 <div>
                     <label for="service-select">Xidmət</label>
                     <select id="service-select">
-                        <option value="Saç kəsimi (15 AZN)" data-price="15">Saç kəsimi — 15 AZN</option>
-                        <option value="Saqqal kəsimi (10 AZN)" data-price="10">Saqqal kəsimi — 10 AZN</option>
-                        <option value="Saç + Saqqal (22 AZN)" data-price="22">Saç + Saqqal — 22 AZN</option>
-                        <option value="Uşaq kəsimi (12 AZN)" data-price="12">Uşaq kəsimi — 12 AZN</option>
+                        <option value="Saç kəsimi (5-7 AZN)" data-price="6">Saç kəsimi — 5-7 AZN</option>
+                        <option value="Saqqal (3-5 AZN)" data-price="4">Saqqal — 3-5 AZN</option>
+                        <option value="Masqa (2 AZN)" data-price="2">Masqa — 2 AZN</option>
+                        <option value="Lipiçka (3 AZN)" data-price="3">Lipiçka — 3 AZN</option>
+                        <option value="Saç yuma+Uklatka (5 AZN)" data-price="5">Saç yuma+Uklatka — 5 AZN</option>
                     </select>
                 </div>
 
@@ -255,8 +256,9 @@
                 </div>
 
                 <div>
-                    <label for="book-time">Saat (11:00 – 23:00)</label>
+                    <label for="book-time">Saat (10:00 – 22:00)</label>
                     <select id="book-time">
+                        <option value="10:00">10:00</option>
                         <option value="11:00">11:00</option>
                         <option value="12:00">12:00</option>
                         <option value="13:00">13:00</option>
@@ -269,7 +271,6 @@
                         <option value="20:00">20:00</option>
                         <option value="21:00">21:00</option>
                         <option value="22:00">22:00</option>
-                        <option value="23:00">23:00</option>
                     </select>
                 </div>
             </div>
@@ -282,7 +283,7 @@
     <div id="sec-schedule" class="section">
         <div class="card">
             <h2>Aktiv və Bugünkü Növbələr</h2>
-            <p class="muted">Seçilmiş gün üzrə bron olunmuş vaxtlar (11:00 – 23:00).</p>
+            <p class="muted">Seçilmiş gün üzrə bron olunmuş vaxtlar (10:00 – 22:00).</p>
             <label for="filter-date">Tarixə görə süzgəclə</label>
             <input type="date" id="filter-date" onchange="renderPublicSchedule()">
             <div id="public-schedule-list"></div>
@@ -321,7 +322,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
                 <div>
                     <h2 style="margin:0;"><span id="active-barber-title"></span></h2>
-                    <p class="muted" style="margin:4px 0 0 0;">WhatsApp: <b id="active-barber-wa"></b> | İş saatı: <b>11:00 – 23:00</b></p>
+                    <p class="muted" style="margin:4px 0 0 0;">WhatsApp: <b id="active-barber-wa"></b> | İş saatı: <b>10:00 – 22:00</b></p>
                 </div>
                 <button class="btn-sm btn-del" onclick="barberLogout()">Çıxış</button>
             </div>
@@ -363,7 +364,6 @@
     const db = getDatabase(app);
     const bookingsRef = ref(db, "barbershop_bookings");
 
-    // Şifrələr ekranda göstərilmir; yalnız ustalar və admin bilir
     const PASSWORDS = {
         admin: "admin2026",
         rehman: "barber1",
@@ -376,12 +376,12 @@
     };
 
     const TIME_SLOTS = [
-        "11:00", "12:00", "13:00", "14:00", "15:00", "16:00",
-        "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
+        "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00",
+        "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
     ];
 
     let bookings = [];
-    let sessionRole = sessionStorage.getItem("panel_role") || ""; // "admin" | "rehman" | "ferid"
+    let sessionRole = sessionStorage.getItem("panel_role") || "";
     let viewingBarber = sessionStorage.getItem("viewing_barber") || "Usta Rəhman";
 
     const todayStr = new Date().toISOString().split("T")[0];
@@ -493,7 +493,7 @@
         }
 
         if (!TIME_SLOTS.includes(time)) {
-            return alert("İş saatı 11:00 – 23:00 aralığındadır.");
+            return alert("İş saatı 10:00 – 22:00 aralığındadır.");
         }
 
         const conflict = bookings.some(
@@ -537,7 +537,7 @@
         const selectedDate = document.getElementById("filter-date").value;
 
         const filtered = bookings
-            .filter(b => (!selectedDate || b.date === selectedDate) && b.status !== "Ləğv edildi")
+            .filter(b => (b.barber === "Usta Rəhman" || b.barber === "Usta Fərid") && (!selectedDate || b.date === selectedDate) && b.status !== "Ləğv edildi")
             .sort((a, b) => a.time.localeCompare(b.time));
 
         if (filtered.length === 0) {
