@@ -97,13 +97,32 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 14px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .booking-top {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
             flex-wrap: wrap;
         }
+        .reschedule-box {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .reschedule-box input, .reschedule-box select {
+            width: auto;
+            min-width: 130px;
+            margin-bottom: 0;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+
         .badge {
             display: inline-block;
             padding: 3px 9px;
@@ -119,14 +138,15 @@
 
         .actions-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .btn-sm {
-            padding: 6px 10px;
+            padding: 7px 11px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: bold;
         }
         .btn-ok { background: var(--success); color: #000; }
+        .btn-warn { background: var(--accent); color: #000; }
         .btn-del { background: var(--danger); color: #fff; }
         .auth-box { max-width: 400px; margin: 30px auto; }
     </style>
@@ -147,7 +167,7 @@
     <div id="sec-booking" class="section active">
         <div class="card">
             <h2>Yeni Randevu Qeydiyyatı</h2>
-            <p class="muted">Xidməti, bərbəri, tarixi və boş saatı seçib yerinizi bron edin.</p>
+            <p class="muted">Xidməti, ustanı, tarixi və boş saatı seçib yerinizi bron edin.</p>
 
             <label for="cust-name">Ad və Soyad</label>
             <input type="text" id="cust-name" placeholder="Məs: Murad Əliyev">
@@ -169,9 +189,8 @@
                 <div>
                     <label for="barber-select">Bərbər</label>
                     <select id="barber-select" onchange="refreshSlotAvailability()">
-                        <option value="Usta Əli">Usta Əli</option>
-                        <option value="Usta Kamran">Usta Kamran</option>
-                        <option value="Usta Rauf">Usta Rauf</option>
+                        <option value="Usta Rəhman">Usta Rəhman</option>
+                        <option value="Usta Fərid">Usta Fərid</option>
                     </select>
                 </div>
             </div>
@@ -188,6 +207,7 @@
                         <option value="10:00">10:00</option>
                         <option value="11:00">11:00</option>
                         <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
                         <option value="14:00">14:00</option>
                         <option value="15:00">15:00</option>
                         <option value="16:00">16:00</option>
@@ -214,19 +234,25 @@
         </div>
     </div>
 
-    <!-- BƏRBƏR / ADMİN PANELİ -->
+    <!-- BƏRBƏR PANELİ -->
     <div id="sec-barber" class="section">
         <div id="barber-login-box" class="card auth-box">
             <h2>Bərbər Girişi</h2>
-            <p class="muted" style="text-align:center;">Randevuları idarə etmək üçün daxil olun (Test: <b>admin</b> / <b>12345</b>)</p>
-            <input type="text" id="barber-user" placeholder="İstifadəçi adı">
-            <input type="password" id="barber-pass" placeholder="Şifrə">
+            <p class="muted" style="text-align:center;">Panelə daxil olmaq üçün adınızı seçin.</p>
+            <label for="barber-login-select">Bərbər seçin</label>
+            <select id="barber-login-select">
+                <option value="Usta Rəhman">Usta Rəhman</option>
+                <option value="Usta Fərid">Usta Fərid</option>
+            </select>
             <button class="btn-primary" onclick="barberLogin()">Daxil Ol</button>
         </div>
 
         <div id="barber-panel-box" class="card" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-                <h2 style="margin:0;">Bütün Qeydiyyatlar</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                <div>
+                    <h2 style="margin:0;"><span id="active-barber-title"></span> — Randevular</h2>
+                    <p class="muted" style="margin:4px 0 0 0;">Müştərinin vaxtını buradan dəyişə bilərsiniz (məsələn, 10:00 → 12:00).</p>
+                </div>
                 <button class="btn-sm btn-del" onclick="barberLogout()">Çıxış</button>
             </div>
             <div id="barber-bookings-list"></div>
@@ -246,8 +272,10 @@
     const db = getDatabase(app);
     const bookingsRef = ref(db, "barbershop_bookings");
 
+    const TIME_SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+
     let bookings = [];
-    let isBarberLoggedIn = localStorage.getItem("barber_auth") === "true";
+    let activeBarber = localStorage.getItem("active_barber") || "";
 
     const todayStr = new Date().toISOString().split("T")[0];
     document.getElementById("book-date").value = todayStr;
@@ -337,31 +365,56 @@
 
         listEl.innerHTML = filtered.map(b => `
             <div class="booking-item">
-                <div>
-                    <b>${b.time}</b> — ${b.barber} (${b.service})<br>
-                    <span class="muted" style="margin:0;">Müştəri: ${b.name} | Tarix: ${b.date}</span><br>
-                    <span class="badge ${b.status === "Tamamlandı" ? "done" : ""}">${b.status}</span>
-                </div>
+                <b>${b.time}</b> — ${b.barber} (${b.service})<br>
+                <span class="muted" style="margin:0;">Müştəri: ${b.name} | Tarix: ${b.date}</span><br>
+                <span class="badge ${b.status === "Tamamlandı" ? "done" : ""}">${b.status}</span>
             </div>
         `).join("");
     }
 
     window.barberLogin = function() {
-        const u = document.getElementById("barber-user").value.trim();
-        const p = document.getElementById("barber-pass").value.trim();
-        if (u === "admin" && p === "12345") {
-            isBarberLoggedIn = true;
-            localStorage.setItem("barber_auth", "true");
-            renderBarberView();
-        } else {
-            alert("İstifadəçi adı və ya şifrə yanlışdır.");
-        }
+        const selected = document.getElementById("barber-login-select").value;
+        activeBarber = selected;
+        localStorage.setItem("active_barber", activeBarber);
+        renderBarberView();
     };
 
     window.barberLogout = function() {
-        isBarberLoggedIn = false;
-        localStorage.removeItem("barber_auth");
+        activeBarber = "";
+        localStorage.removeItem("active_barber");
         renderBarberView();
+    };
+
+    window.rescheduleBooking = async function(bookingId, barberName) {
+        const dateInput = document.getElementById(`resched-date-${bookingId}`);
+        const timeSelect = document.getElementById(`resched-time-${bookingId}`);
+        const newDate = dateInput ? dateInput.value : "";
+        const newTime = timeSelect ? timeSelect.value : "";
+
+        if (!newDate || !newTime) return alert("Yeni tarix və saat seçin.");
+
+        const conflict = bookings.some(
+            b => b.id !== bookingId &&
+                 b.barber === barberName &&
+                 b.date === newDate &&
+                 b.time === newTime &&
+                 b.status !== "Ləğv edildi"
+        );
+        if (conflict) {
+            return alert(`${newDate} tarixində ${newTime} saatı artıq başqa müştəri üçün doludur.`);
+        }
+
+        try {
+            await update(ref(db, `barbershop_bookings/${bookingId}`), {
+                date: newDate,
+                time: newTime,
+                status: "Gözləyir"
+            });
+            alert(`Randevu ${newDate} | ${newTime} vaxtına dəyişdirildi.`);
+        } catch (err) {
+            console.error(err);
+            alert("Vaxt yenilənərkən xəta baş verdi.");
+        }
     };
 
     window.updateBookingStatus = async function(id, status) {
@@ -383,31 +436,66 @@
     };
 
     function renderBarberView() {
-        document.getElementById("barber-login-box").style.display = isBarberLoggedIn ? "none" : "block";
-        document.getElementById("barber-panel-box").style.display = isBarberLoggedIn ? "block" : "none";
+        const loginBox = document.getElementById("barber-login-box");
+        const panelBox = document.getElementById("barber-panel-box");
+        const titleEl = document.getElementById("active-barber-title");
 
-        const listEl = document.getElementById("barber-bookings-list");
-        if (!isBarberLoggedIn) return;
-
-        const sorted = [...bookings].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-        if (sorted.length === 0) {
-            listEl.innerHTML = `<p class="muted">Hələ heç bir qeydiyyat yoxdur.</p>`;
+        if (!activeBarber) {
+            loginBox.style.display = "block";
+            panelBox.style.display = "none";
             return;
         }
 
-        listEl.innerHTML = sorted.map(b => {
+        loginBox.style.display = "none";
+        panelBox.style.display = "block";
+        titleEl.innerText = activeBarber;
+
+        const listEl = document.getElementById("barber-bookings-list");
+        const barberBookings = bookings
+            .filter(b => b.barber === activeBarber)
+            .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+
+        if (barberBookings.length === 0) {
+            listEl.innerHTML = `<p class="muted">${activeBarber} üçün hələ qeydiyyat yoxdur.</p>`;
+            return;
+        }
+
+        listEl.innerHTML = barberBookings.map(b => {
             const badgeClass = b.status === "Tamamlandı" ? "done" : (b.status === "Ləğv edildi" ? "cancel" : "");
+            const slotOptions = TIME_SLOTS.map(slot => {
+                const isTakenByOther = bookings.some(
+                    other => other.id !== b.id &&
+                             other.barber === b.barber &&
+                             other.date === b.date &&
+                             other.time === slot &&
+                             other.status !== "Ləğv edildi"
+                );
+                const selectedAttr = b.time === slot ? "selected" : "";
+                const disabledAttr = isTakenByOther ? "disabled" : "";
+                const labelText = isTakenByOther ? `${slot} (Dolu)` : slot;
+                return `<option value="${slot}" ${selectedAttr} ${disabledAttr}>${labelText}</option>`;
+            }).join("");
+
             return `
                 <div class="booking-item">
-                    <div>
-                        <b>${b.date} | ${b.time}</b> — ${b.barber}<br>
-                        <span><b>${b.name}</b> (${b.phone}) — ${b.service}</span><br>
-                        <span class="badge ${badgeClass}">${b.status}</span>
+                    <div class="booking-top">
+                        <div>
+                            <b>${b.date} | ${b.time}</b> — ${b.service}<br>
+                            <span><b>${b.name}</b> (${b.phone})</span><br>
+                            <span class="badge ${badgeClass}">${b.status}</span>
+                        </div>
+                        <div class="actions-row">
+                            <button class="btn-sm btn-ok" onclick="updateBookingStatus('${b.id}', 'Tamamlandı')">Tamamlandı</button>
+                            <button class="btn-sm" style="background:#374151; color:#fff;" onclick="updateBookingStatus('${b.id}', 'Ləğv edildi')">Ləğv et</button>
+                            <button class="btn-sm btn-del" onclick="deleteBooking('${b.id}')">Sil</button>
+                        </div>
                     </div>
-                    <div class="actions-row">
-                        <button class="btn-sm btn-ok" onclick="updateBookingStatus('${b.id}', 'Tamamlandı')">Tamamlandı</button>
-                        <button class="btn-sm" style="background:#374151; color:#fff;" onclick="updateBookingStatus('${b.id}', 'Ləğv edildi')">Ləğv et</button>
-                        <button class="btn-sm btn-del" onclick="deleteBooking('${b.id}')">Sil</button>
+
+                    <div class="reschedule-box">
+                        <span style="font-size:0.82rem; color:var(--muted);">Vaxtı dəyiş:</span>
+                        <input type="date" id="resched-date-${b.id}" value="${b.date}">
+                        <select id="resched-time-${b.id}">${slotOptions}</select>
+                        <button class="btn-sm btn-warn" onclick="rescheduleBooking('${b.id}', '${b.barber}')">Vaxtı Yenilə</button>
                     </div>
                 </div>
             `;
@@ -423,4 +511,4 @@
     });
 </script>
 </body>
-  </html>
+</html>
