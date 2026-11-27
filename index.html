@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bərbərxana Randevu & Qeydiyyat Sistemi</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #181b22;
+            --accent: #f39c12;
+            --accent-hover: #e67e22;
+            --text: #ffffff;
+            --muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #10b981;
+            --border: #2a2f3a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: var(--text); line-height: 1.5; }
+
+        header {
+            background: var(--card);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo { font-size: 1.15rem; font-weight: bold; color: var(--accent); letter-spacing: 0.5px; }
+        .nav-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-btns button {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .nav-btns button.active, .nav-btns button:hover {
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .container { max-width: 960px; margin: 20px auto; padding: 0 14px; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 18px;
+        }
+        .card h2, .card h3 { color: var(--accent); margin-bottom: 12px; }
+        .muted { color: var(--muted); font-size: 0.88rem; margin-bottom: 14px; }
+
+        label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 5px; }
+        input, select {
+            width: 100%;
+            padding: 11px 12px;
+            margin-bottom: 12px;
+            background: #0f1115;
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 7px;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 0.98rem;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        .booking-item {
+            background: #12151b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: rgba(243, 156, 18, 0.18);
+            color: var(--accent);
+            margin-top: 4px;
+        }
+        .badge.done { background: rgba(16, 185, 129, 0.18); color: var(--success); }
+        .badge.cancel { background: rgba(239, 68, 68, 0.18); color: var(--danger); }
+
+        .actions-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .btn-sm {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .btn-ok { background: var(--success); color: #000; }
+        .btn-del { background: var(--danger); color: #fff; }
+        .auth-box { max-width: 400px; margin: 30px auto; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">💈 BƏRBƏRXANA RANDEVU</div>
+    <div class="nav-btns">
+        <button onclick="showSection('booking')" id="nav-booking" class="active">Qeydiyyat</button>
+        <button onclick="showSection('schedule')" id="nav-schedule">Növbələr</button>
+        <button onclick="showSection('barber')" id="nav-barber">Bərbər Paneli</button>
+    </div>
+</header>
+
+<div class="container">
+    <!-- MÜŞTƏRİ QEYDİYYAT BÖLMƏSİ -->
+    <div id="sec-booking" class="section active">
+        <div class="card">
+            <h2>Yeni Randevu Qeydiyyatı</h2>
+            <p class="muted">Xidməti, bərbəri, tarixi və boş saatı seçib yerinizi bron edin.</p>
+
+            <label for="cust-name">Ad və Soyad</label>
+            <input type="text" id="cust-name" placeholder="Məs: Murad Əliyev">
+
+            <label for="cust-phone">Telefon Nömrəsi</label>
+            <input type="tel" id="cust-phone" placeholder="Məs: 050 555 44 33">
+
+            <div class="grid-2">
+                <div>
+                    <label for="service-select">Xidmət</label>
+                    <select id="service-select">
+                        <option value="Saç kəsimi (15 AZN)">Saç kəsimi — 15 AZN</option>
+                        <option value="Saqqal kəsimi (10 AZN)">Saqqal kəsimi — 10 AZN</option>
+                        <option value="Saç + Saqqal (22 AZN)">Saç + Saqqal — 22 AZN</option>
+                        <option value="Uşaq kəsimi (12 AZN)">Uşaq kəsimi — 12 AZN</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="barber-select">Bərbər</label>
+                    <select id="barber-select" onchange="refreshSlotAvailability()">
+                        <option value="Usta Əli">Usta Əli</option>
+                        <option value="Usta Kamran">Usta Kamran</option>
+                        <option value="Usta Rauf">Usta Rauf</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label for="book-date">Tarix</label>
+                    <input type="date" id="book-date" onchange="refreshSlotAvailability()">
+                </div>
+
+                <div>
+                    <label for="book-time">Saat</label>
+                    <select id="book-time">
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                        <option value="19:00">19:00</option>
+                        <option value="20:00">20:00</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="createBooking()">Randevunu Təsdiqlə</button>
+        </div>
+    </div>
+
+    <!-- ÜMUMİ NÖVBƏLƏR BÖLMƏSİ -->
+    <div id="sec-schedule" class="section">
+        <div class="card">
+            <h2>Aktiv və Bugünkü Növbələr</h2>
+            <p class="muted">Seçilmiş gün üzrə bron olunmuş vaxtlar aşağıda görünür.</p>
+            <label for="filter-date">Tarixə görə süzgəclə</label>
+            <input type="date" id="filter-date" onchange="renderPublicSchedule()">
+            <div id="public-schedule-list"></div>
+        </div>
+    </div>
+
+    <!-- BƏRBƏR / ADMİN PANELİ -->
+    <div id="sec-barber" class="section">
+        <div id="barber-login-box" class="card auth-box">
+            <h2>Bərbər Girişi</h2>
+            <p class="muted" style="text-align:center;">Randevuları idarə etmək üçün daxil olun (Test: <b>admin</b> / <b>12345</b>)</p>
+            <input type="text" id="barber-user" placeholder="İstifadəçi adı">
+            <input type="password" id="barber-pass" placeholder="Şifrə">
+            <button class="btn-primary" onclick="barberLogin()">Daxil Ol</button>
+        </div>
+
+        <div id="barber-panel-box" class="card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+                <h2 style="margin:0;">Bütün Qeydiyyatlar</h2>
+                <button class="btn-sm btn-del" onclick="barberLogout()">Çıxış</button>
+            </div>
+            <div id="barber-bookings-list"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    const firebaseConfig = {
+        databaseURL: "https://pubg-scrim-live-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const bookingsRef = ref(db, "barbershop_bookings");
+
+    let bookings = [];
+    let isBarberLoggedIn = localStorage.getItem("barber_auth") === "true";
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    document.getElementById("book-date").value = todayStr;
+    document.getElementById("filter-date").value = todayStr;
+
+    window.showSection = function(sec) {
+        document.querySelectorAll(".section").forEach(el => el.classList.remove("active"));
+        document.querySelectorAll(".nav-btns button").forEach(el => el.classList.remove("active"));
+        document.getElementById("sec-" + sec).classList.add("active");
+        document.getElementById("nav-" + sec).classList.add("active");
+        renderBarberView();
+    };
+
+    window.refreshSlotAvailability = function() {
+        const barber = document.getElementById("barber-select").value;
+        const date = document.getElementById("book-date").value;
+        const timeSelect = document.getElementById("book-time");
+
+        Array.from(timeSelect.options).forEach(opt => {
+            const slotTime = opt.value;
+            const isTaken = bookings.some(
+                b => b.barber === barber && b.date === date && b.time === slotTime && b.status !== "Ləğv edildi"
+            );
+            opt.disabled = isTaken;
+            opt.text = isTaken ? `${slotTime} (Doludur)` : slotTime;
+        });
+
+        if (timeSelect.selectedOptions[0] && timeSelect.selectedOptions[0].disabled) {
+            const firstFree = Array.from(timeSelect.options).find(o => !o.disabled);
+            if (firstFree) timeSelect.value = firstFree.value;
+        }
+    };
+
+    window.createBooking = async function() {
+        const name = document.getElementById("cust-name").value.trim();
+        const phone = document.getElementById("cust-phone").value.trim();
+        const service = document.getElementById("service-select").value;
+        const barber = document.getElementById("barber-select").value;
+        const date = document.getElementById("book-date").value;
+        const time = document.getElementById("book-time").value;
+
+        if (!name || !phone || !date || !time) {
+            return alert("Zəhmət olmasa ad, telefon, tarix və saatı daxil edin.");
+        }
+
+        const conflict = bookings.some(
+            b => b.barber === barber && b.date === date && b.time === time && b.status !== "Ləğv edildi"
+        );
+        if (conflict) {
+            return alert("Seçdiyiniz saat artıq doludur. Başqa vaxt seçin.");
+        }
+
+        try {
+            await push(bookingsRef, {
+                name,
+                phone,
+                service,
+                barber,
+                date,
+                time,
+                status: "Gözləyir",
+                createdAt: Date.now()
+            });
+
+            document.getElementById("cust-name").value = "";
+            document.getElementById("cust-phone").value = "";
+            alert("Randevunuz qeydə alındı!");
+            showSection("schedule");
+        } catch (err) {
+            console.error(err);
+            alert("Qeydiyyat zamanı xəta baş verdi.");
+        }
+    };
+
+    function renderPublicSchedule() {
+        const listEl = document.getElementById("public-schedule-list");
+        const selectedDate = document.getElementById("filter-date").value;
+
+        const filtered = bookings
+            .filter(b => (!selectedDate || b.date === selectedDate) && b.status !== "Ləğv edildi")
+            .sort((a, b) => a.time.localeCompare(b.time));
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = `<p class="muted">Bu tarix üçün qeydiyyat yoxdur.</p>`;
+            return;
+        }
+
+        listEl.innerHTML = filtered.map(b => `
+            <div class="booking-item">
+                <div>
+                    <b>${b.time}</b> — ${b.barber} (${b.service})<br>
+                    <span class="muted" style="margin:0;">Müştəri: ${b.name} | Tarix: ${b.date}</span><br>
+                    <span class="badge ${b.status === "Tamamlandı" ? "done" : ""}">${b.status}</span>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    window.barberLogin = function() {
+        const u = document.getElementById("barber-user").value.trim();
+        const p = document.getElementById("barber-pass").value.trim();
+        if (u === "admin" && p === "12345") {
+            isBarberLoggedIn = true;
+            localStorage.setItem("barber_auth", "true");
+            renderBarberView();
+        } else {
+            alert("İstifadəçi adı və ya şifrə yanlışdır.");
+        }
+    };
+
+    window.barberLogout = function() {
+        isBarberLoggedIn = false;
+        localStorage.removeItem("barber_auth");
+        renderBarberView();
+    };
+
+    window.updateBookingStatus = async function(id, status) {
+        try {
+            await update(ref(db, `barbershop_bookings/${id}`), { status });
+        } catch (err) {
+            console.error(err);
+            alert("Status yenilənmədi.");
+        }
+    };
+
+    window.deleteBooking = async function(id) {
+        try {
+            await remove(ref(db, `barbershop_bookings/${id}`));
+        } catch (err) {
+            console.error(err);
+            alert("Silinərkən xəta baş verdi.");
+        }
+    };
+
+    function renderBarberView() {
+        document.getElementById("barber-login-box").style.display = isBarberLoggedIn ? "none" : "block";
+        document.getElementById("barber-panel-box").style.display = isBarberLoggedIn ? "block" : "none";
+
+        const listEl = document.getElementById("barber-bookings-list");
+        if (!isBarberLoggedIn) return;
+
+        const sorted = [...bookings].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+        if (sorted.length === 0) {
+            listEl.innerHTML = `<p class="muted">Hələ heç bir qeydiyyat yoxdur.</p>`;
+            return;
+        }
+
+        listEl.innerHTML = sorted.map(b => {
+            const badgeClass = b.status === "Tamamlandı" ? "done" : (b.status === "Ləğv edildi" ? "cancel" : "");
+            return `
+                <div class="booking-item">
+                    <div>
+                        <b>${b.date} | ${b.time}</b> — ${b.barber}<br>
+                        <span><b>${b.name}</b> (${b.phone}) — ${b.service}</span><br>
+                        <span class="badge ${badgeClass}">${b.status}</span>
+                    </div>
+                    <div class="actions-row">
+                        <button class="btn-sm btn-ok" onclick="updateBookingStatus('${b.id}', 'Tamamlandı')">Tamamlandı</button>
+                        <button class="btn-sm" style="background:#374151; color:#fff;" onclick="updateBookingStatus('${b.id}', 'Ləğv edildi')">Ləğv et</button>
+                        <button class="btn-sm btn-del" onclick="deleteBooking('${b.id}')">Sil</button>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    onValue(bookingsRef, (snapshot) => {
+        const raw = snapshot.val() || {};
+        bookings = Object.entries(raw).map(([id, val]) => ({ id, ...val }));
+        refreshSlotAvailability();
+        renderPublicSchedule();
+        renderBarberView();
+    });
+</script>
+</body>
+  </html>
