@@ -302,18 +302,18 @@
                 <button class="btn-primary" onclick="loginAs('admin')">Admin Giriş</button>
             </div>
 
-            <!-- ALT HİSSƏ: BARBER 1 & BARBER 2 -->
+            <!-- ALT HİSSƏ: USTALAR -->
             <div class="login-block" style="margin-bottom:0;">
-                <h3>Barber 1 & Barber 2</h3>
-                <label for="barber-role-select">Bərbər hesabı</label>
+                <h3>Usta Girişi</h3>
+                <label for="barber-role-select">Usta seçin</label>
                 <select id="barber-role-select">
-                    <option value="barber1">Barber 1 — Usta Rəhman</option>
-                    <option value="barber2">Barber 2 — Usta Fərid</option>
+                    <option value="rehman">Usta Rəhman</option>
+                    <option value="ferid">Usta Fərid</option>
                 </select>
 
-                <label for="barber-pass-input">Bərbər Şifrəsi</label>
+                <label for="barber-pass-input">Usta Şifrəsi</label>
                 <input type="password" id="barber-pass-input" placeholder="Şifrəni daxil edin">
-                <button class="btn-primary" onclick="loginBarberAccount()">Bərbər Giriş</button>
+                <button class="btn-primary" onclick="loginBarberAccount()">Usta Giriş</button>
             </div>
         </div>
 
@@ -327,8 +327,8 @@
             </div>
 
             <div id="admin-barber-switcher" class="barber-switch" style="display:none;">
-                <button id="btn-view-rehman" onclick="switchAdminViewingBarber('Usta Rəhman')">Barber 1 (Usta Rəhman)</button>
-                <button id="btn-view-ferid" onclick="switchAdminViewingBarber('Usta Fərid')">Barber 2 (Usta Fərid)</button>
+                <button id="btn-view-rehman" onclick="switchAdminViewingBarber('Usta Rəhman')">Usta Rəhman</button>
+                <button id="btn-view-ferid" onclick="switchAdminViewingBarber('Usta Fərid')">Usta Fərid</button>
             </div>
 
             <div class="stats-bar">
@@ -363,11 +363,11 @@
     const db = getDatabase(app);
     const bookingsRef = ref(db, "barbershop_bookings");
 
-    // Şifrələr ekranda göstərilmir; yalnız bərbərlər və admin bilir
+    // Şifrələr ekranda göstərilmir; yalnız ustalar və admin bilir
     const PASSWORDS = {
         admin: "admin2026",
-        barber1: "rehman2026",
-        barber2: "ferid2026"
+        rehman: "barber1",
+        ferid: "barber2"
     };
 
     const BARBER_PHONES = {
@@ -381,7 +381,7 @@
     ];
 
     let bookings = [];
-    let sessionRole = sessionStorage.getItem("panel_role") || ""; // "admin" | "barber1" | "barber2"
+    let sessionRole = sessionStorage.getItem("panel_role") || ""; // "admin" | "rehman" | "ferid"
     let viewingBarber = sessionStorage.getItem("viewing_barber") || "Usta Rəhman";
 
     const todayStr = new Date().toISOString().split("T")[0];
@@ -437,7 +437,7 @@
         }
 
         sessionRole = selectedRole;
-        viewingBarber = selectedRole === "barber1" ? "Usta Rəhman" : "Usta Fərid";
+        viewingBarber = selectedRole === "rehman" ? "Usta Rəhman" : "Usta Fərid";
         sessionStorage.setItem("panel_role", sessionRole);
         sessionStorage.setItem("viewing_barber", viewingBarber);
         document.getElementById("barber-pass-input").value = "";
@@ -628,13 +628,13 @@
         loginBox.style.display = "none";
         panelBox.style.display = "block";
 
-        const targetBarber = sessionRole === "barber1"
+        const targetBarber = sessionRole === "rehman"
             ? "Usta Rəhman"
-            : (sessionRole === "barber2" ? "Usta Fərid" : viewingBarber);
+            : (sessionRole === "ferid" ? "Usta Fərid" : viewingBarber);
 
         const roleLabel = sessionRole === "admin"
             ? `Admin — ${targetBarber}`
-            : (sessionRole === "barber1" ? "Barber 1 (Usta Rəhman)" : "Barber 2 (Usta Fərid)");
+            : targetBarber;
 
         titleEl.innerText = roleLabel;
         const rawWa = BARBER_PHONES[targetBarber] || "";
